@@ -9,6 +9,7 @@ import 'cli/unsupported_entry.dart'
     if (dart.library.io) 'cli/desktop_entry.dart'
     as desktop_cli;
 import 'storage/app_preferences.dart';
+import 'services/login_captcha.dart';
 import 'development/development_storage.dart';
 import 'development/development_panel.dart';
 

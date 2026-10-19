@@ -13,6 +13,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _agree = true;
   bool _rememberPassword = true;
   bool _loading = false;
+  bool _verifyingCaptcha = false;
   String? _error;
   LoginSession? _session;
 
@@ -70,6 +71,15 @@ class _LoginPageState extends State<LoginPage> {
         email: email,
         password: password,
         rememberPassword: _rememberPassword,
+        onCaptcha: (challenge) async {
+          if (!mounted) return null;
+          setState(() => _verifyingCaptcha = true);
+          try {
+            return await NeteaseLoginCaptcha.verify(challenge);
+          } finally {
+            if (mounted) setState(() => _verifyingCaptcha = false);
+          }
+        },
       );
       if (!mounted) {
         return;
@@ -168,6 +178,10 @@ class _LoginPageState extends State<LoginPage> {
           if (_error != null) ...[
             const SizedBox(height: 8),
             Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+          ],
+          if (_verifyingCaptcha) ...[
+            const SizedBox(height: 8),
+            const Text('请在弹出的网易人机验证窗口中完成验证。'),
           ],
           const SizedBox(height: 12),
           Wrap(
