@@ -221,6 +221,11 @@ class ResourceDraft {
       jsonDecode(jsonEncode(values)) as Map,
     );
     result.removeWhere((key, _) => readOnlyFields.contains(key));
+    // Details include null effect classifications for ordinary resources, but
+    // the update endpoint accepts these optional fields only when selected.
+    for (final key in ['pri_effect_type', 'sub_effect_type']) {
+      if (result[key] == null) result.remove(key);
+    }
     result['item_name'] = text('item_name').trim();
     for (final key in ['pri_type', 'sub_type', 'mod_second_type', 'price']) {
       if (result[key] is String) result[key] = int.tryParse(result[key]);
