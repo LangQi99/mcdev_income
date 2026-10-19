@@ -214,9 +214,32 @@ class ResourceDraft {
     'can_manage_server',
     'can_silent_online',
     'can_synchronize_pc_old',
+    'can_synchronize_pc',
+    'can_update_pc',
+    'exempt_perf_review_num',
+    'first_accept_time',
+    'first_sell_rank_top',
+    'is_premium',
+    'is_silent_online',
+    'is_suitable_pc',
+    'level_data',
+    'level_data_version',
+    'lobby_config_op_log',
+    'lobby_res',
+    'lobby_sort_key',
+    'maintain',
+    'ori_weak_offline',
+    'ori_weak_offline_reason',
+    'performance_service_available',
+    'performance_service_status',
+    'play_plan_expire_time',
+    'premium_apply_status',
+    'rating_level',
+    'repeat_apply_review_time',
+    'score',
   };
 
-  Map<String, dynamic> toPayload() {
+  Map<String, dynamic> toPayload({ResourceOptions? options}) {
     final result = Map<String, dynamic>.from(
       jsonDecode(jsonEncode(values)) as Map,
     );
@@ -245,11 +268,36 @@ class ResourceDraft {
       return resource;
     }).toList();
     if (category == 'pe') {
+      // PEEditForm.dealFormData and its resource form normalize optional
+      // detail values before saving. The detail endpoint can return nulls
+      // which are not the object/list types used by the editor's form.
+      if (result['subject_id'] == '') result['subject_id'] = null;
       result['prerequisite_item_ids'] = entries(
         'prerequisite_items',
       ).map((e) => e['item_id']).where((e) => e != null).toList();
       if (result['pri_type'] != 2) result.remove('mod_second_type');
+      final subtype = options
+          ?.secondary(category, result['pri_type'])
+          .where((e) => e['id'] == result['sub_type'])
+          .firstOrNull;
+      if (result['lobby_commercialize'] == true &&
+          (subtype?['lobby'] == true || result['is_sync'] == true)) {
+        result.remove('sub_type');
+      }
       final dlc = result['dlc_info'];
+      if (dlc is Map) {
+        if (dlc['dlc_switch'] != true) {
+          result['dlc_info'] = {
+            'dlc_switch': false,
+            'dlc_type': 'off',
+            'master': <String, dynamic>{},
+            'slave_list': <dynamic>[],
+          };
+        } else {
+          dlc['master'] ??= <String, dynamic>{};
+          dlc['slave_list'] ??= <dynamic>[];
+        }
+      }
       if (dlc is Map && dlc['dlc_switch'] == true) {
         final self = {
           'item_id': values['item_id'] ?? '',
@@ -318,6 +366,10 @@ class ResourceDraft {
         .secondary(category, values['pri_type'])
         .where((e) => e['id'] == values['sub_type'])
         .firstOrNull;
+    if (subtype?['mod_version'] == true &&
+        !options.strings('mod_version').contains(text('mod_version'))) {
+      errors.add('请选择有效的 ModSDK 版本（mod_version）');
+    }
     if (ResourceOptions.maps(subtype?['body_type']).isNotEmpty &&
         text('body_type').isEmpty) {
       errors.add('请选择皮肤体型');

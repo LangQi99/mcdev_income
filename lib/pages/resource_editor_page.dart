@@ -314,7 +314,7 @@ class _ResourceEditorPageState extends State<ResourceEditorPage> {
       _notice = null;
     });
     try {
-      final payload = _draft.toPayload();
+      final payload = _draft.toPayload(options: _options);
       if (review && _id != null && _savedPayload == jsonEncode(payload)) {
         setState(() => _saving = false);
         await _openReview(payload);
@@ -349,7 +349,7 @@ class _ResourceEditorPageState extends State<ResourceEditorPage> {
       _draft.values['item_id'] = savedId;
       _changed = true;
       _dirty = false;
-      _savedPayload = jsonEncode(_draft.toPayload());
+      _savedPayload = jsonEncode(_draft.toPayload(options: _options));
       final prefs = await AppPreferences.getInstance();
       if (_localKey != null) {
         await prefs.remove(_localKey!);

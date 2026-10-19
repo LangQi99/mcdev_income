@@ -166,7 +166,7 @@ class ResourceUpload {
           'valid': true,
           'category': category,
           'item_id': itemId,
-          'payload': preview.toPayload(),
+          'payload': preview.toPayload(options: options),
           'uploads': tasks.map((t) => t['prepared']).toList(),
         };
       }
@@ -231,7 +231,7 @@ class ResourceUpload {
           resourceCategory: category,
           itemId: itemId,
           payload: {
-            ...draft.toPayload(),
+            ...draft.toPayload(options: options),
             'is_check_apply': queuePreviouslyRequested && confirmQueue,
           },
         );
@@ -247,7 +247,10 @@ class ResourceUpload {
           result = await api.saveResource(
             resourceCategory: category,
             itemId: itemId,
-            payload: {...draft.toPayload(), 'is_check_apply': true},
+            payload: {
+              ...draft.toPayload(options: options),
+              'is_check_apply': true,
+            },
           );
           if (result['data']?['need_check_apply'] == true) {
             job['phase'] = 'save_queue';
