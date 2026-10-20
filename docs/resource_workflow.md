@@ -62,6 +62,8 @@ HTTP 200 不代表业务成功，必须检查 `status == ok`（文件服务器�
 
 2026-10-19 实际更新普通 PE 附加包时，详情返回的 `pri_effect_type: null`、`sub_effect_type: null` 会使保存接口拒绝请求并返回 `params error`。序列化保存表单时省略这两个未选择的可选字段，保留已选择的分类及其他未知字段；修复后图片更新保存成功并完成 8 个位置的读回核对。
 
+PE 的“我的山头”类型标记使用 `is_domain_server_item` 整数：普通资源为 `0`，加入专区为 `1`；它与 `main_city` 是独立字段，不能用 `main_city=true` 代替。新建 PE 表单显式提供 `0` 默认值，导入的布尔值和 `"0"` / `"1"` 在保存时规范为整数，其他值在上传前拒绝。旧资源详情未提供该字段时按普通资源初始化，已有选择保持原值。
+
 文件上传先向 `/filepicker/file_token` 获取指定 `file_type` 的令牌，再以 multipart 提交到 `https://fp.ps.netease.com/x19/file/new/`，字段为 `Authorization` 和 `fpfile`。不向文件主机转发登录 Cookie 或 ACCOUNT-TOKEN。保留 `x-ntes-signature` 与网页格式化后的 JSON 响应，组装 `{body, file_type, sign}` 写入资源字段。介绍图片也携带签名属性。未替换的文件元数据保持原样。
 
 文件请求显式发送 `Accept: application/json`。2026-09-27 实测发现，缺少此请求头时，文件服务器会把成功 JSON 包在 HTML 的 `<textarea>` 中，同时返回 HTTP 200 和签名。客户端同时兼容直接 JSON 和带签名的单个 textarea 响应，仅解析数据，不执行 HTML 中的脚本；非成功响应按上传凭证、大小、频率或服务器错误分别提示。

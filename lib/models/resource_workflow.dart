@@ -151,6 +151,7 @@ class ResourceDraft {
                 'pre_review_video': '',
                 'force_encrypt': false,
                 'is_original': false,
+                if (category == 'pe') 'is_domain_server_item': 0,
                 'searchable': true,
                 'version_compatible_enable': false,
                 'anti_cheat_enable': 0,
@@ -187,6 +188,13 @@ class ResourceDraft {
   List<String> strings(String key) => get(key) is List
       ? (get(key) as List).map((e) => e.toString()).toList()
       : [];
+
+  int? _domainServerItemFlag() {
+    final value = get('is_domain_server_item');
+    if (value == null || value == false || value == 0 || value == '0') return 0;
+    if (value == true || value == 1 || value == '1') return 1;
+    return null;
+  }
 
   // Only response metadata is discarded. Unknown editable fields from existing
   // resources are preserved so newer platform fields are not silently erased.
@@ -268,6 +276,9 @@ class ResourceDraft {
       return resource;
     }).toList();
     if (category == 'pe') {
+      // This is an integer type marker, independent of main_city.
+      final domainFlag = _domainServerItemFlag();
+      if (domainFlag != null) result['is_domain_server_item'] = domainFlag;
       // PEEditForm.dealFormData and its resource form normalize optional
       // detail values before saving. The detail endpoint can return nulls
       // which are not the object/list types used by the editor's form.
@@ -316,6 +327,9 @@ class ResourceDraft {
 
   List<String> validate(ResourceOptions options) {
     final errors = <String>[];
+    if (category == 'pe' && _domainServerItemFlag() == null) {
+      errors.add('“我的山头”标记必须为 0 或 1');
+    }
     if (text('item_name').trim().isEmpty) errors.add('请填写资源名称');
     if (values['pri_type'] == null) errors.add('请选择主类别');
     if (values['sub_type'] == null) errors.add('请选择次类别');
